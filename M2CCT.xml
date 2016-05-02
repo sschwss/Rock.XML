@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ROCKXML version='1.0'>
+	<label> Model 2: Constant Cement Model </label>
+	<description> Homogeneous fluid mixing. HSWL sorting. </description>
+	<volume>
+		<axis>
+			<label> total porosity </label>
+			<range>
+				<min> 0 </min>
+				<max> 0.38 </max>
+				<steps> 100 </steps>
+			</range>
+		</axis>
+	</volume>
+	
+	<reservoir>
+		<variable>
+			<!-- volume fraction of clay (to quartz) -->
+			<label> lithology </label> 
+			<value> 0.05 </value> 	
+		</variable>
+		
+		<variable>
+			<!-- volume fraction of gas (to brine) -->
+			<label> gas saturation </label> 
+			<value> 0.7 </value> 	
+		</variable>
+				
+		<variable>
+			<label> critical porosity </label>
+			<value> 0.38 </value>
+		</variable>
+		
+		<variable>
+			<label> CCT low porosity </label>
+			<value> 0.35 </value>
+		</variable>	
+		
+		<variable>
+			<label> CCT scheme </label>
+			<value> 1 </value>
+		</variable>
+		
+		<variable>
+			<label> CCT relaxation </label>
+			<value> 0.3 </value>
+		</variable>
+		
+		<variable>
+			<label> pore pressure </label>
+			<value> 10 </value> <!-- MPa -->
+		</variable>
+		
+		<variable>
+			<label> effective pressure </label>
+			<reservoir-variable> pore pressure </reservoir-variable> <!-- MPa -->
+		</variable>
+		
+		<variable>
+			<label> temperature </label>
+			<value> 36 </value> <!-- °C -->	
+		</variable>
+		
+		<variable>
+			<label> salinity </label>
+			<value> 0.05 </value> 	
+		</variable>
+		
+		<variable>
+			<label> gas gravity </label>
+			<value> 0.7 </value> 
+		</variable>
+		
+		<variable>
+			<label> maximum CCT-CT porosity </label>
+			<maximum>
+				<element>
+					<reservoir-variable> total porosity </reservoir-variable>
+				</element>
+				<element>
+					<reservoir-variable> CCT low porosity </reservoir-variable>
+				</element>
+			</maximum>
+		</variable>
+		
+		<variable>
+			<label> vol.frac. high porosity end-member </label>
+			<!-- When phi/phiCCTlow > 1 we are in the cementation zone and 
+					we set vol.frac to 1 -->
+			<minimum>
+				<element>
+					<divide>
+						<dividend>
+							<reservoir-variable> total porosity </reservoir-variable>
+						</dividend>
+						<divisor>
+							<reservoir-variable> CCT low porosity </reservoir-variable>
+						</divisor>
+					</divide>
+				</element>
+				<element> 1
+				</element>
+			</minimum>
+		</variable>
+	</reservoir>
+
+	<predefinitions>
+		<fluid>
+			<label> brine </label>
+			<batzle-wang-brine>
+				<pore-pressure>
+					<reservoir-variable> pore pressure </reservoir-variable>
+				</pore-pressure>
+				<temperature>
+					<reservoir-variable> temperature </reservoir-variable>
+				</temperature>
+				<salinity>
+					<reservoir-variable> salinity </reservoir-variable>
+				</salinity>
+			</batzle-wang-brine>
+		</fluid>
+		
+		<fluid>
+			<label> gas </label>
+			<batzle-wang-gas>
+				<gas-gravity>
+					<reservoir-variable> gas gravity </reservoir-variable>
+				</gas-gravity>
+				<temperature>
+					<reservoir-variable> temperature </reservoir-variable>
+				</temperature>
+				<pore-pressure>
+					<reservoir-variable> pore pressure </reservoir-variable>
+				</pore-pressure>
+			</batzle-wang-gas>
+		</fluid>
+		
+		<fluid>
+			<label> effective fluid </label>
+			<!-- Assuming homogeneous mixture -->
+			<reuss>
+				<constituent>
+					<fluid>
+						<use> gas </use>
+					</fluid>
+					<volume-fraction>
+						<reservoir-variable> gas saturation </reservoir-variable>
+					</volume-fraction>
+				</constituent>
+				<constituent>
+					<fluid>
+						<use> brine </use>
+					</fluid>
+				</constituent>
+			</reuss>
+		</fluid>
+		
+		<solid>
+			<label> quartz </label>
+			<tabulated>
+				<bulk-modulus> 36.8 </bulk-modulus>  	<!-- GPa -->
+				<shear-modulus> 44 </shear-modulus>  	<!-- GPa -->
+				<density> 2.65 </density>  				<!-- g/cm^3) -->
+			</tabulated>
+		</solid>
+		
+		<solid>
+			<label> clay </label>
+			<tabulated>
+				<bulk-modulus> 12 </bulk-modulus>  		<!-- GPa -->
+				<shear-modulus> 6 </shear-modulus>  	<!-- GPa -->
+				<density> 2.6 </density>  				<!-- g/cm^3) -->
+			</tabulated>
+		</solid>
+		
+		<solid>
+			<label> effective mineral </label>
+			<hill>
+				<constituent>
+					<solid>
+						<use> clay </use>
+					</solid>
+					<volume-fraction>
+						<reservoir-variable> lithology </reservoir-variable>
+					</volume-fraction>
+				</constituent>
+				<constituent>
+					<solid>
+						<use> quartz </use>
+					</solid>
+				</constituent>
+			</hill>
+		</solid>
+		
+		<dry-rock>
+			<label> CCT high porosity end-member </label>
+			<cctmono>
+				<mineral>
+					<use> effective mineral </use>
+				</mineral>
+				<cctporosity>
+					<reservoir-variable> maximum CCT-CT porosity </reservoir-variable>
+				</cctporosity>
+				<critporosity>
+					<reservoir-variable> critical porosity </reservoir-variable>
+				</critporosity>
+				<coord-nr> 8 </coord-nr>
+				<cctscheme>
+					<reservoir-variable> CCT scheme </reservoir-variable>
+				</cctscheme>
+				<cctrelaxation>
+					<reservoir-variable> CCT relaxation </reservoir-variable>
+				</cctrelaxation>
+			</cctmono>
+		</dry-rock>
+				
+		<dry-rock>
+			<label> dry rock </label>
+			<hsw-low>
+				<constituent>
+					<dry-rock>
+						<use> CCT high porosity end-member </use>
+					</dry-rock>
+					<volume-fraction>
+						<reservoir-variable> vol.frac. high porosity end-member </reservoir-variable>
+					</volume-fraction>
+				</constituent>
+				<constituent>
+					<solid>
+						<use> effective mineral </use>
+					</solid>
+				</constituent>
+			</hsw-low>
+		</dry-rock>
+	</predefinitions>
+
+	<rock>
+		<label> effective rock </label>
+		<gassmann>
+			<dry-rock>
+				<use> dry rock </use>
+			</dry-rock>
+			<fluid>
+				<use> effective fluid </use>
+			</fluid>
+		</gassmann>
+	</rock>
+</ROCKXML>
